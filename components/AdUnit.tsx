@@ -1,44 +1,41 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 type AdUnitProps = {
-  adSlot: string;
-  adFormat?: string;
+  adCode: string;
   className?: string;
 };
 
-declare global {
-  interface Window {
-    adsbygoogle: unknown[];
-  }
-}
+export default function AdUnit({ adCode, className = "" }: AdUnitProps) {
+  const adRef = useRef<HTMLDivElement>(null);
 
-export default function AdUnit({
-  adSlot,
-  adFormat = "auto",
-  className = "",
-}: AdUnitProps) {
   useEffect(() => {
-    try {
-      if (typeof window !== "undefined") {
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-      }
-    } catch (error) {
-      console.error("AdSense error:", error);
-    }
-  }, []);
+    if (!adRef.current) return;
 
-  return (
-    <div className={className}>
-      <ins
-        className="adsbygoogle"
-        style={{ display: "block" }}
-        data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-        data-ad-slot={adSlot}
-        data-ad-format={adFormat}
-        data-full-width-responsive="true"
-      />
-    </div>
-  );
+    adRef.current.innerHTML = "";
+
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = adCode;
+
+    Array.from(wrapper.childNodes).forEach((node) => {
+      if (node.nodeName !== "SCRIPT") {
+        adRef.current?.appendChild(node.cloneNode(true));
+      }
+    });
+
+    const scripts = wrapper.querySelectorAll("script");
+    scripts.forEach((oldScript) => {
+      const newScript = document.createElement("script");
+
+      Array.from(oldScript.attributes).forEach((attr) => {
+        newScript.setAttribute(attr.name, attr.value);
+      });
+
+      newScript.text = oldScript.innerHTML;
+      adRef.current?.appendChild(newScript);
+    });
+  }, [adCode]);
+
+  return <div ref={adRef} className={className} />;
 }
