@@ -37,6 +37,11 @@ export default function Home() {
   const [copied, setCopied] = useState(false);
   const [videoValidated, setVideoValidated] = useState(false);
 
+  const extractVideoId = (input: string) =>
+    input.match(
+      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
+    )?.[1] || "";
+
   const fetchVideoInfo = async (_videoId: string) => {
     try {
       const res = await fetch(`/api/video-info?url=${encodeURIComponent(url)}`);
@@ -58,11 +63,10 @@ export default function Home() {
 
     setLoading(true);
     setVideoValidated(false);
+    setScript("");
+    setRewrittenScript(null);
 
-    const videoIdMatch = url.match(
-      /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/
-    );
-    const videoId = videoIdMatch?.[1];
+    const videoId = extractVideoId(url);
 
     if (videoId) {
       await fetchVideoInfo(videoId);
@@ -139,10 +143,12 @@ export default function Home() {
     URL.revokeObjectURL(blobUrl);
   };
 
+  const videoIdFromUrl = extractVideoId(url);
+
   return (
     <main className="mx-auto max-w-6xl px-4 py-10 md:px-6 md:py-14">
       {copied && (
-        <div className="fixed left-1/2 top-6 z-50 w-96 -translate-x-1/2 animate-slide-down">
+        <div className="fixed left-1/2 top-6 z-50 w-[92%] max-w-96 -translate-x-1/2 animate-slide-down">
           <div className="flex items-center gap-3 rounded-2xl border border-green-200 bg-white px-6 py-4 shadow-2xl">
             <CheckCircle2 className="h-5 w-5 shrink-0 text-green-600" />
             <span className="font-semibold text-green-800">Copied to clipboard! ✨</span>
@@ -150,14 +156,14 @@ export default function Home() {
         </div>
       )}
 
-      <section className="relative overflow-hidden rounded-4xl border border-red-100 bg-linear-to-br from-red-50/50 via-white to-pink-50/30 px-6 py-14 shadow-[0_25px_80px_rgba(239,68,68,0.15)] md:px-10 md:py-20">
+      <section className="relative overflow-hidden rounded-[2rem] border border-red-100 bg-gradient-to-br from-red-50/50 via-white to-pink-50/30 px-6 py-14 shadow-[0_25px_80px_rgba(239,68,68,0.15)] md:px-10 md:py-20">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(239,68,68,0.15),transparent_50%),radial-gradient(circle_at_80%_80%,rgba(248,113,113,0.1),transparent_50%)]" />
         <div className="relative mx-auto max-w-4xl text-center">
           <span className="inline-flex items-center rounded-full border border-red-200/70 bg-red-50/80 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-red-700 shadow-lg backdrop-blur-sm">
             🚀 AI-Powered Creator Tool
           </span>
 
-          <h1 className="mt-8 bg-linear-to-r from-gray-900 via-gray-800 to-red-900 bg-clip-text text-4xl font-black tracking-tight text-transparent md:text-6xl lg:text-7xl">
+          <h1 className="mt-8 bg-gradient-to-r from-gray-900 via-gray-800 to-red-900 bg-clip-text text-4xl font-black tracking-tight text-transparent md:text-6xl lg:text-7xl">
             YouTube को Script बनाएं
           </h1>
 
@@ -177,7 +183,7 @@ export default function Home() {
               <button
                 onClick={fetchScript}
                 disabled={loading || !url.trim()}
-                className="group relative h-16 min-w-60 rounded-2xl bg-linear-to-r from-red-600 to-red-700 px-8 text-lg font-bold text-white shadow-xl transition-all hover:from-red-700 hover:to-red-800 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-lg"
+                className="group relative h-16 min-w-60 rounded-2xl bg-gradient-to-r from-red-600 to-red-700 px-8 text-lg font-bold text-white shadow-xl transition-all hover:from-red-700 hover:to-red-800 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-50 disabled:shadow-lg"
               >
                 {loading ? (
                   <>
@@ -205,20 +211,22 @@ export default function Home() {
                 alt={videoInfo.title}
                 className="h-32 w-56 rounded-2xl object-cover shadow-2xl md:h-40 md:w-72"
               />
-              <a
-                href={`https://youtube.com/watch?v=${url.match(/[^"&?\/\s]{11}/)?.[0]}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group absolute -inset-2 rounded-2xl bg-black/20 opacity-0 transition-all hover:opacity-100"
-              >
-                <Play className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-white opacity-80 shadow-2xl group-hover:scale-110" />
-              </a>
+              {videoIdFromUrl && (
+                <a
+                  href={`https://youtube.com/watch?v=${videoIdFromUrl}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group absolute -inset-2 rounded-2xl bg-black/20 opacity-0 transition-all hover:opacity-100"
+                >
+                  <Play className="absolute left-1/2 top-1/2 h-12 w-12 -translate-x-1/2 -translate-y-1/2 text-white opacity-80 shadow-2xl group-hover:scale-110" />
+                </a>
+              )}
             </div>
 
             <div className="flex flex-1 flex-col gap-2">
-              <h3 className="line-clamp-2 text-xl font-bold text-gray-900 lg:text-2xl">
+              <h2 className="line-clamp-2 text-xl font-bold text-gray-900 lg:text-2xl">
                 {videoInfo.title}
-              </h3>
+              </h2>
               <p className="text-sm text-gray-600">{videoInfo.channel}</p>
               <div className="flex items-center gap-2 text-xs text-gray-500">
                 <span>📹 Verified Video</span>
@@ -246,12 +254,12 @@ export default function Home() {
       </section>
 
       {script && (
-        <section className="mt-10 rounded-4xl border border-gray-200/50 bg-linear-to-br from-white via-gray-50/50 to-white shadow-2xl">
-          <div className="flex flex-col gap-6 border-b border-gray-100/50 bg-linear-to-r from-red-50 via-white/80 to-pink-50/50 px-8 py-8 md:flex-row md:items-center md:justify-between">
+        <section className="mt-10 rounded-[2rem] border border-gray-200/50 bg-gradient-to-br from-white via-gray-50/50 to-white shadow-2xl">
+          <div className="flex flex-col gap-6 border-b border-gray-100/50 bg-gradient-to-r from-red-50 via-white/80 to-pink-50/50 px-8 py-8 md:flex-row md:items-center md:justify-between">
             <div>
               <div className="flex items-center gap-3">
                 <div className="h-3 w-3 rounded-full bg-green-500 shadow-lg"></div>
-                <h2 className="bg-linear-to-r from-gray-900 to-gray-700 bg-clip-text text-3xl font-black text-transparent">
+                <h2 className="bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-3xl font-black text-transparent">
                   Script Ready! ✅
                 </h2>
               </div>
@@ -270,11 +278,11 @@ export default function Home() {
               <button
                 onClick={() =>
                   downloadScript(
-                    `original-${videoInfo?.title.slice(0, 30) || "transcript"}.txt`,
+                    `original-${videoInfo?.title?.slice(0, 30) || "transcript"}.txt`,
                     script
                   )
                 }
-                className="group flex items-center gap-3 rounded-2xl bg-linear-to-r from-gray-900 to-black px-6 py-3.5 text-lg font-bold text-white shadow-2xl transition-all hover:from-gray-800"
+                className="group flex items-center gap-3 rounded-2xl bg-gradient-to-r from-gray-900 to-black px-6 py-3.5 text-lg font-bold text-white shadow-2xl transition-all hover:from-gray-800"
               >
                 <Download className="h-5 w-5" />
                 Download TXT
@@ -290,14 +298,51 @@ export default function Home() {
         </section>
       )}
 
+      {script && (
+  <section className="mt-8 hidden md:block">
+    <div className="mx-auto flex w-full justify-center px-2">
+      <div className="rounded-2xl border border-gray-200/60 bg-white p-3 shadow-xl">
+        <div className="mb-2 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+          Sponsored Banner
+        </div>
+
+        <div className="flex justify-center overflow-x-auto">
+          <div className="w-[728px] min-w-[728px] max-w-[728px] overflow-hidden">
+            <Script
+              id="adsterra-banner-config-middle"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `
+                  atOptions = {
+                    'key' : 'ad5bcbbc1df6018f5970f337f0bba5d6',
+                    'format' : 'iframe',
+                    'height' : 90,
+                    'width' : 728,
+                    'params' : {}
+                  };
+                `,
+              }}
+            />
+            <Script
+              id="adsterra-banner-script-middle"
+              strategy="afterInteractive"
+              src="https://www.highperformanceformat.com/ad5bcbbc1df6018f5970f337f0bba5d6/invoke.js"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+)}
+
       {script && !rewrittenScript && (
-        <section className="mt-8 rounded-4xl border-2 border-purple-200/60 bg-linear-to-br from-purple-50 to-pink-50/50 p-8 shadow-2xl">
+        <section className="mt-8 rounded-[2rem] border-2 border-purple-200/60 bg-gradient-to-br from-purple-50 to-pink-50/50 p-8 shadow-2xl">
           <div className="mx-auto max-w-4xl text-center">
-            <div className="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-linear-to-br from-purple-500 to-pink-600 p-5 shadow-2xl">
+            <div className="mx-auto mb-6 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-purple-500 to-pink-600 p-5 shadow-2xl">
               <Sparkles className="h-10 w-10 text-white" />
             </div>
 
-            <h2 className="mb-4 bg-linear-to-r from-purple-900 to-pink-700 bg-clip-text text-3xl font-black text-transparent">
+            <h2 className="mb-4 bg-gradient-to-r from-purple-900 to-pink-700 bg-clip-text text-3xl font-black text-transparent">
               ✨ AI Rewrite करें?
             </h2>
 
@@ -308,7 +353,7 @@ export default function Home() {
             <button
               onClick={rewriteScript}
               disabled={rewriting}
-              className="group mx-auto flex items-center gap-4 rounded-3xl bg-linear-to-r from-purple-600 via-pink-600 to-purple-700 px-12 py-6 text-xl font-black text-white shadow-2xl transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
+              className="group mx-auto flex items-center gap-4 rounded-3xl bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 px-12 py-6 text-xl font-black text-white shadow-2xl transition-all hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-50"
             >
               {rewriting ? (
                 <>
@@ -324,18 +369,18 @@ export default function Home() {
             </button>
 
             <p className="mt-6 text-sm text-gray-500">
-              Powered by <strong>Google Gemini AI</strong> • Same facts, new engaging style
+              Powered by <strong>YT To Script AI</strong> • Same facts, new engaging style
             </p>
           </div>
         </section>
       )}
 
       {rewrittenScript && (
-        <section className="mt-8 rounded-4xl border border-purple-200/50 bg-linear-to-br from-purple-50/30 via-white to-pink-50/20 shadow-2xl">
-          <div className="border-b border-purple-100/50 bg-linear-to-r from-purple-50/70 via-white/90 to-pink-50/50 px-8 py-8">
+        <section className="mt-8 rounded-[2rem] border border-purple-200/50 bg-gradient-to-br from-purple-50/30 via-white to-pink-50/20 shadow-2xl">
+          <div className="border-b border-purple-100/50 bg-gradient-to-r from-purple-50/70 via-white/90 to-pink-50/50 px-8 py-8">
             <div className="flex items-center gap-3">
-              <div className="h-4 w-4 animate-pulse rounded-full bg-linear-to-r from-purple-500 to-pink-500 shadow-lg"></div>
-              <h2 className="bg-linear-to-r from-purple-900 via-pink-800 to-purple-800 bg-clip-text text-3xl font-black text-transparent">
+              <div className="h-4 w-4 animate-pulse rounded-full bg-gradient-to-r from-purple-500 to-pink-500 shadow-lg"></div>
+              <h2 className="bg-gradient-to-r from-purple-900 via-pink-800 to-purple-800 bg-clip-text text-3xl font-black text-transparent">
                 ✨ AI Rewritten Script Ready!
               </h2>
             </div>
@@ -343,7 +388,7 @@ export default function Home() {
           </div>
 
           <div className="p-8">
-            <div className="mb-8 rounded-2xl bg-linear-to-r from-purple-50 to-pink-50/50 p-6 shadow-lg">
+            <div className="mb-8 rounded-2xl bg-gradient-to-r from-purple-50 to-pink-50/50 p-6 shadow-lg">
               <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-purple-700">📌 नया Title</h3>
               <div className="text-2xl font-black leading-tight text-gray-900">{rewrittenScript.title}</div>
             </div>
@@ -365,13 +410,13 @@ export default function Home() {
 
               <div className="md:col-span-2">
                 <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-purple-700">🎬 Main Script</h3>
-                <div className="whitespace-pre-wrap rounded-2xl border border-purple-100/30 bg-linear-to-b from-white to-purple-50/30 p-6 text-lg leading-relaxed text-gray-800 shadow-xl">
+                <div className="whitespace-pre-wrap rounded-2xl border border-purple-100/30 bg-gradient-to-b from-white to-purple-50/30 p-6 text-lg leading-relaxed text-gray-800 shadow-xl">
                   {rewrittenScript.main_script}
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 rounded-2xl border border-emerald-200/50 bg-linear-to-r from-emerald-50 to-green-50/50 p-6 shadow-xl">
+            <div className="mt-8 rounded-2xl border border-emerald-200/50 bg-gradient-to-r from-emerald-50 to-green-50/50 p-6 shadow-xl">
               <h3 className="mb-4 text-sm font-bold uppercase tracking-wider text-emerald-700">🚀 Call to Action</h3>
               <div className="whitespace-pre-wrap text-xl font-semibold leading-relaxed text-gray-900">
                 {rewrittenScript.cta}
@@ -410,7 +455,7 @@ export default function Home() {
                     ].join("\n\n")
                   )
                 }
-                className="group flex items-center gap-3 rounded-2xl bg-linear-to-r from-emerald-600 to-emerald-700 px-8 py-4 text-lg font-bold text-white shadow-2xl transition-all hover:from-emerald-700"
+                className="group flex items-center gap-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-emerald-700 px-8 py-4 text-lg font-bold text-white shadow-2xl transition-all hover:from-emerald-700"
               >
                 <Download className="h-5 w-5" />
                 Download Rewrite
@@ -419,23 +464,6 @@ export default function Home() {
           </div>
         </section>
       )}
-
-      <section className="mt-12">
-        <div className="mb-3 text-xs font-semibold uppercase tracking-wider text-gray-400">
-          Sponsored Content
-        </div>
-
-        <div className="rounded-[28px] border border-gray-200/50 bg-white p-8 shadow-xl">
-          <div id="container-e7b3fc5bf851fe29e9afa40aad4aeca6-bottom"></div>
-          <Script
-            id="adsterra-native-bottom"
-            strategy="afterInteractive"
-            async
-            data-cfasync="false"
-            src="https://pl29193774.profitablecpmratenetwork.com/e7b3fc5bf851fe29e9afa40aad4aeca6/invoke.js"
-          />
-        </div>
-      </section>
 
       <section className="mt-20 grid gap-8 md:grid-cols-3">
         {[
@@ -472,9 +500,9 @@ function FeatureCard({
   desc: string;
 }) {
   return (
-    <div className="group relative rounded-4xl border border-gray-100/50 bg-white p-10 shadow-xl transition-all duration-500 hover:-translate-y-3 hover:border-red-200/50 hover:shadow-2xl hover:shadow-red-100/50">
-      <div className="absolute inset-0 rounded-4xl bg-linear-to-r from-red-50/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
-      <div className="relative mb-8 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-linear-to-br from-gray-50 to-gray-100 shadow-lg group-hover:shadow-xl">
+    <div className="group relative rounded-[2rem] border border-gray-100/50 bg-white p-10 shadow-xl transition-all duration-500 hover:-translate-y-3 hover:border-red-200/50 hover:shadow-2xl hover:shadow-red-100/50">
+      <div className="absolute inset-0 rounded-[2rem] bg-gradient-to-r from-red-50/30 to-transparent opacity-0 transition-opacity group-hover:opacity-100" />
+      <div className="relative mb-8 inline-flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-gray-50 to-gray-100 shadow-lg group-hover:shadow-xl">
         {icon}
       </div>
       <h3 className="mb-4 text-2xl font-black text-gray-900 transition-all group-hover:text-red-600">

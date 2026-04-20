@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       userAgent: '*',
       allow: '/',
     },
-    sitemap: 'https://yttoscript.com/sitemap.xml',
-    host: 'https://yttoscript.com',
+    sitemap: 'https://youtube-script-site.vercel.app/sitemap.xml',
+    host: 'https://youtube-script-site.vercel.app',
   };
 }

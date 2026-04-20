@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = 'https://yttoscript.com';
+  const baseUrl = 'https://youtube-script-site.vercel.app';
 
   const routes = [
     '',

@@ -12,7 +12,7 @@ const inter = Inter({
   variable: "--font-inter",
 });
 
-const siteUrl = "https://yttoscript.com";
+const siteUrl = "https://youtube-script-site.vercel.app";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
